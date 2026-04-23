@@ -1,4 +1,4 @@
-"""Generate synthetic grid outage and appliance data for AIMS T2.3.
+"""Generate synthetic grid outage and appliance data.
 
 The generator follows the challenge recipe:
 - 365 days of hourly grid history by default, while preserving the required
@@ -457,7 +457,7 @@ def outage_taxonomy() -> dict:
             "hydrology/fuel adequacy planning",
             "backup, solar, battery, and hybrid controller testing",
         ],
-        "scope_note": "The T2.3 brief requires an SME forecast-and-prioritization prototype. This taxonomy is used to select representative factors and to guide future utility-grade analytics.",
+        "scope_note": "The challenge requires an SME forecast-and-prioritization prototype. This taxonomy is used to select representative factors and to guide future utility-grade analytics.",
     }
 
 
@@ -473,7 +473,7 @@ def generate_all(output_dir: str | Path = "data", seed: int = DEFAULT_SEED, days
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate synthetic AIMS T2.3 data.")
+    parser = argparse.ArgumentParser(description="Generate synthetic grid outage data.")
     parser.add_argument("--output-dir", default="data")
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--days", type=int, default=DEFAULT_DAYS)

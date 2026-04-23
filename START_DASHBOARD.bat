@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 set MPLBACKEND=Agg
-echo Starting KTT Power Dashboard...
+echo Starting Grid Outage Planner Dashboard...
 echo.
 echo If this is the first run, dependencies may install now.
 python -m pip install -r requirements.txt

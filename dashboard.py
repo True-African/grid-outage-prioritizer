@@ -1,4 +1,4 @@
-"""Localhost dashboard for KTT Power Plan.
+"""Localhost dashboard for Grid Outage Planner.
 
 Run:
     python dashboard.py
@@ -10,28 +10,240 @@ Then open:
 from __future__ import annotations
 
 import argparse
+import base64
 import csv
 import json
+import os
+import platform
+import re
+import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib import parse as urlparse_module
+from urllib import request as urlrequest
 from urllib.parse import parse_qs, urlparse
 
 import pandas as pd
 
 from prioritizer import estimate_weekly_savings, plan, summarize_plan
 from run_demo import OUTPUT_DIR, run_pipeline
-from sms_sender import load_recipients, outbox_entries, send_digest
-from voice_note import VOICE_DIR, build_voice_prompt, generate_voice_note
 
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 REPORT_PATH = OUTPUT_DIR / "demo_report.json"
 PLANS_PATH = OUTPUT_DIR / "plans_all.csv"
+OUTBOX_PATH = OUTPUT_DIR / "sms_outbox.jsonl"
+LOCAL_RECIPIENTS_PATH = ROOT / "sms_recipients.local.json"
+VOICE_DIR = OUTPUT_DIR / "voice_notes"
 INCOMING_SIGNALS_PATH = DATA_DIR / "incoming_signals.jsonl"
 INCOMING_MEASUREMENTS_PATH = DATA_DIR / "incoming_measurements.csv"
 REPORT_LOCK = threading.RLock()
+
+
+def _split_recipients(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    return [item.strip() for item in raw.replace(";", ",").split(",") if item.strip()]
+
+
+def load_recipients() -> list[str]:
+    env_recipients = _split_recipients(os.getenv("POWERPLAN_SMS_RECIPIENTS"))
+    if env_recipients:
+        return env_recipients
+    if LOCAL_RECIPIENTS_PATH.exists():
+        payload = json.loads(LOCAL_RECIPIENTS_PATH.read_text(encoding="utf-8"))
+        return [str(item).strip() for item in payload.get("recipients", []) if str(item).strip()]
+    return []
+
+
+def outbox_entries(limit: int = 30) -> list[dict]:
+    if not OUTBOX_PATH.exists():
+        return []
+    rows = []
+    for line in OUTBOX_PATH.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            rows.append(json.loads(line))
+    return rows[-limit:]
+
+
+def _write_outbox(entry: dict) -> None:
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    with OUTBOX_PATH.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, default=str) + "\n")
+
+
+def _twilio_send(to_number: str, message: str) -> dict:
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    from_number = os.getenv("TWILIO_FROM_NUMBER")
+    messaging_service_sid = os.getenv("TWILIO_MESSAGING_SERVICE_SID")
+    if not account_sid or not auth_token or (not from_number and not messaging_service_sid):
+        raise RuntimeError("Twilio credentials are incomplete.")
+
+    form = {"To": to_number, "Body": message}
+    if messaging_service_sid:
+        form["MessagingServiceSid"] = messaging_service_sid
+    else:
+        form["From"] = from_number
+
+    body = urlparse_module.urlencode(form).encode("utf-8")
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+    auth = base64.b64encode(f"{account_sid}:{auth_token}".encode("utf-8")).decode("ascii")
+    req = urlrequest.Request(
+        url,
+        data=body,
+        headers={"Authorization": f"Basic {auth}", "Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    with urlrequest.urlopen(req, timeout=20) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    return {"provider": "twilio", "provider_status": payload.get("status"), "sid": payload.get("sid")}
+
+
+def send_sms(to_number: str, message: str) -> dict:
+    provider = os.getenv("POWERPLAN_SMS_PROVIDER", "dry_run").strip().lower()
+    entry = {"provider": provider, "to": to_number, "message": message, "characters": len(message)}
+    if len(message) > 160:
+        entry.update({"status": "blocked", "error": "Message is longer than 160 characters."})
+        _write_outbox(entry)
+        return entry
+
+    try:
+        if provider in {"", "dry_run", "dry-run", "log"}:
+            entry["status"] = "dry_run"
+        elif provider == "twilio":
+            entry.update(_twilio_send(to_number, message))
+            entry["status"] = "sent"
+        else:
+            entry.update({"status": "blocked", "error": f"Unsupported POWERPLAN_SMS_PROVIDER: {provider}"})
+    except Exception as exc:
+        entry.update({"status": "failed", "error": str(exc)})
+    _write_outbox(entry)
+    return entry
+
+
+def send_digest(messages: list[dict | str], recipients: list[str] | None = None) -> dict:
+    recipients = recipients if recipients is not None else load_recipients()
+    normalized_messages = [item.get("message", "") if isinstance(item, dict) else str(item) for item in messages]
+    if not recipients:
+        return {
+            "status": "no_recipients",
+            "provider": os.getenv("POWERPLAN_SMS_PROVIDER", "dry_run"),
+            "sent_count": 0,
+            "results": [],
+            "message": "No recipients configured. Set POWERPLAN_SMS_RECIPIENTS or create sms_recipients.local.json.",
+        }
+    results = []
+    for recipient in recipients:
+        for message in normalized_messages:
+            results.append(send_sms(recipient, message))
+    sent_count = sum(1 for result in results if result.get("status") in {"sent", "dry_run"})
+    return {
+        "status": "ok",
+        "provider": os.getenv("POWERPLAN_SMS_PROVIDER", "dry_run"),
+        "recipients": recipients,
+        "sent_count": sent_count,
+        "results": results,
+    }
+
+
+def _clean_name(value: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_-]+", "_", value).strip("_") or "business"
+
+
+def _format_list(items: list[str]) -> str:
+    if not items:
+        return "nothing"
+    if len(items) == 1:
+        return items[0]
+    if len(items) == 2:
+        return items[0] + " and " + items[1]
+    return ", ".join(items[:-1]) + ", and " + items[-1]
+
+
+def build_voice_prompt(report: dict, business: str = "salon") -> dict:
+    businesses = report.get("businesses", {})
+    business_info = businesses.get(business, {"display_name": business})
+    display_name = business_info.get("display_name", business.replace("_", " "))
+    worst_label = report.get("worst_forecast_window", {}).get("label", "the highest risk hour")
+    decisions = report.get("decision_summary", {}).get(business, [])
+    high_risk_decision = next((row for row in decisions if row.get("off")), decisions[0] if decisions else {})
+    off_items = high_risk_decision.get("off", [])
+    on_items = high_risk_decision.get("on", [])
+    if not on_items:
+        plans = report.get("plans", {}).get(business, [])
+        if plans:
+            first_ts = plans[0]["timestamp"]
+            on_items = [row["appliance"] for row in plans if row["timestamp"] == first_ts and row["status"] == "ON"]
+
+    stale_hours = report.get("offline_policy", {}).get("maximum_staleness_hours", 6)
+    transcript = (
+        f"Power Plan voice note for {display_name}. "
+        f"Highest outage risk is {worst_label}. "
+        f"Switch off {_format_list(off_items)} first. "
+        f"Keep {_format_list(on_items)} on. "
+        f"If internet is not available, use the cached plan for {stale_hours} hours. "
+        "After that, use critical only mode."
+    )
+    return {
+        "business": business,
+        "display_name": display_name,
+        "transcript": transcript,
+        "characters": len(transcript),
+        "offline_mode": f"cached plan for {stale_hours} hours, then critical-only mode",
+    }
+
+
+def _sapi_script(transcript: str, output_path: Path) -> str:
+    safe_text = transcript.replace("'", "''")
+    safe_path = str(output_path).replace("'", "''")
+    return (
+        "Add-Type -AssemblyName System.Speech; "
+        "$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+        "$synth.Rate = -1; $synth.Volume = 100; "
+        f"$synth.SetOutputToWaveFile('{safe_path}'); "
+        f"$synth.Speak('{safe_text}'); "
+        "$synth.Dispose();"
+    )
+
+
+def generate_voice_note(report: dict, business: str = "salon") -> dict:
+    prompt = build_voice_prompt(report, business)
+    VOICE_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = pd.Timestamp.now(tz="UTC").strftime("%Y%m%d_%H%M%S")
+    wav_path = VOICE_DIR / f"{_clean_name(business)}_{timestamp}.wav"
+    manifest_path = wav_path.with_suffix(".json")
+    result = {
+        **prompt,
+        "status": "transcript_only",
+        "audio_path": None,
+        "audio_url": None,
+        "manifest_path": str(manifest_path),
+        "engine": "browser_speech_or_transcript",
+    }
+    if platform.system().lower() == "windows":
+        completed = subprocess.run(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", _sapi_script(prompt["transcript"], wav_path)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        if completed.returncode == 0 and wav_path.exists():
+            result.update(
+                {
+                    "status": "audio_generated",
+                    "audio_path": str(wav_path),
+                    "audio_url": f"/voice_notes/{wav_path.name}",
+                    "engine": "windows_sapi",
+                }
+            )
+        else:
+            result["error"] = (completed.stderr or completed.stdout or "Windows speech synthesis failed.").strip()
+    manifest_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+    return result
 
 
 def _atomic_write_json(path: Path, payload: object) -> None:
@@ -197,7 +409,7 @@ def worst_window(forecast: list[dict]) -> dict:
 
 def sms_digest(worst: dict) -> list[dict]:
     messages = [
-        f"KTT Power: Salon today. Highest risk {worst['label']}. Keep lights, clippers and payments ready; delay dryer when alert is red.",
+        f"Power Plan: Salon today. Highest risk {worst['label']}. Keep lights, clippers and payments ready; delay dryer when alert is red.",
         "If outage hits: OFF dryer and straightener first. Keep lights, clippers, phone charging, payments; TV only if backup allows.",
         "No internet at 13:00? Use cached plan until 6h old. After that run critical-only mode: lights, clippers, phone and payments.",
     ]
@@ -356,7 +568,7 @@ def dashboard_html() -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KTT Power Dashboard</title>
+<title>Grid Outage Planner Dashboard</title>
 <style>
 :root{--ink:#17212b;--muted:#60707d;--line:#d9e2e8;--panel:#fff;--bg:#f4f7f8;--rail:#11191f;--rail2:#172229;--teal:#006d77;--green:#2a9d8f;--red:#d95f5f;--amber:#f4a261;--blue:#457b9d}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg)}header{background:#fff;border-bottom:1px solid var(--line);padding:12px 18px;position:sticky;top:0;z-index:5}h1{font-size:22px;margin:0 0 3px;letter-spacing:0}h2{font-size:17px;margin:0}h3{font-size:14px;margin:12px 0 7px}p{line-height:1.42}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}select,button{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff}button{background:var(--teal);color:#fff;border-color:var(--teal);cursor:pointer}main{max-width:1440px;margin:0 auto;padding:12px}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.tabs a{font-size:13px;text-decoration:none;color:#15323a;background:#e9f2f3;border:1px solid #d0e2e5;padding:6px 10px;border-radius:6px}.layout{display:grid;grid-template-columns:250px 1fr;gap:12px}.side{background:var(--rail);color:#dce7eb;border-radius:8px;padding:12px;position:sticky;top:92px;align-self:start;max-height:calc(100vh - 105px);overflow:auto}.side h2,.side h3{color:#fff}.side .muted{color:#9eb1bb}.content{min-width:0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.two{display:grid;grid-template-columns:1.35fr .65fr;gap:12px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0;margin-bottom:10px;overflow:hidden}.panel>summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:bold;display:flex;justify-content:space-between;gap:12px;align-items:center;background:#fbfdfe;border-bottom:1px solid var(--line)}.panel>summary::-webkit-details-marker{display:none}.panel>summary:after{content:"+";font-size:18px;color:var(--teal)}.panel[open]>summary:after{content:"-"}details.panel>*:not(summary){margin-left:14px;margin-right:14px}.panel-pad{padding:12px 14px}.kpi{background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);padding:9px;border-radius:7px}.kpi b{display:block;font-size:19px;margin-top:3px}.muted{color:var(--muted);font-size:13px}.caption{color:var(--muted);font-size:13px;margin:8px 0 12px}.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#edf5f6;color:#124f57;font-size:12px;margin:2px}.risk-high{background:#ffe9e4;color:#8a231a}.risk-ok{background:#e7f6f2;color:#1d6a60}canvas{width:100%;height:260px;border:1px solid var(--line);border-radius:6px;background:#fff}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}th{background:#f2f6f8}.heat th,.heat td{text-align:center;white-space:nowrap}.heat th:first-child,.heat td:first-child{position:sticky;left:0;background:#fff;text-align:left;z-index:1}.on{background:var(--green);color:#fff;font-weight:bold}.off{background:var(--red);color:#fff;font-weight:bold}.sms{font-family:Consolas,monospace;background:#f3f6f7;padding:9px;border-radius:6px}.decision,.signal{border-left:4px solid var(--amber);padding:8px 10px;background:#fffaf3;margin:8px 0}.signal{background:#152229;border-color:#2a9d8f;color:#dce7eb}.signal b{color:#fff}.small-list{max-height:300px;overflow:auto}.status-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin:8px 0 12px}.dot{width:12px;height:12px;border-radius:50%;display:inline-block;background:#2a9d8f}.dot.amber{background:#f4a261}.dot.red{background:#d95f5f}.side-note{font-size:12px;border-top:1px solid #2d3b44;border-bottom:1px solid #2d3b44;padding:9px 0;margin:8px 0 12px}.summary-note{font-weight:normal;color:var(--muted);font-size:12px}@media(max-width:980px){.grid,.two,.layout{grid-template-columns:1fr}.side{position:static;max-height:none}header{position:static}canvas{height:230px}}
@@ -366,7 +578,7 @@ def dashboard_html() -> str:
 <header>
   <div class="top">
     <div>
-      <h1>KTT Power Dashboard</h1>
+      <h1>Grid Outage Planner Dashboard</h1>
       <div class="muted">Local dashboard for outage risk, appliance decisions, SMS digest, and business impact.</div>
     </div>
     <div class="controls">
@@ -638,7 +850,7 @@ function renderRealities(){
   <tr><th>Low bandwidth</th><td>Static lite page under 50 KB plus SMS digest. Consolidated report avoids many files.</td></tr>
   <tr><th>Intermittent power/internet</th><td>Plan is cached. It is trusted for 6 hours, then switches to critical-only mode.</td></tr>
   <tr><th>Non-smartphone user</th><td>Salon owner receives 3 SMS messages, each under 160 characters.</td></tr>
-  <tr><th>Multiple languages</th><td>Messages use simple appliance names and can be templated in English/Kinyarwanda. Dashboard avoids jargon.</td></tr>
+  <tr><th>Multiple languages</th><td>Messages use simple appliance names and support English/Kinyarwanda templates. Dashboard avoids jargon.</td></tr>
   <tr><th>Illiteracy</th><td>Workflow supports colored LEDs and voice prompt: green ON, red OFF, amber prepare.</td></tr>
   </tbody></table>`;
 }
@@ -794,13 +1006,13 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Serve the KTT Power dashboard on localhost.")
+    parser = argparse.ArgumentParser(description="Serve the Grid Outage Planner dashboard on localhost.")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--rebuild", action="store_true", help="Rebuild the report before starting the server.")
     args = parser.parse_args()
     load_or_build_report(rebuild=args.rebuild)
     server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"KTT Power dashboard running at http://127.0.0.1:{args.port}")
+    print(f"Grid Outage Planner dashboard running at http://127.0.0.1:{args.port}")
     print("Press Ctrl+C to stop.")
     try:
         server.serve_forever()

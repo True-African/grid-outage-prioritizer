@@ -1,4 +1,4 @@
-# AIMS T2.3 Outage Forecaster Model Card
+# Grid Outage Forecaster Model Card
 
 ## Intended Use
 This CPU-only model forecasts 24-hour hourly outage risk for SME appliance planning.
@@ -19,7 +19,7 @@ Hourly load, weather, rain, outage lags, rolling load/rain features, time-of-day
 - Lead-time coverage: 1.0
 
 ## Limitations
-The data is synthetic. This is a decision-support prototype, not a guarantee of grid behavior. Before deployment, it should be calibrated with utility outage logs, transformer-level events, and verified crowd reports.
+The data is synthetic. This is a decision-support prototype, not a guarantee of grid behavior. Deployment requires calibration with utility outage logs, transformer-level events, and verified crowd reports.
 
 ## Reproduce
 Run `python run_demo.py --business salon` from the repository root.

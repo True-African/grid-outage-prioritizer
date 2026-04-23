@@ -12,6 +12,5 @@ models/*.joblib
 *.wav
 *.jsonl
 *.png
-process_log.md
 *.ipynb_checkpoints
 tests/__pycache__/

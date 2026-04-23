@@ -3,67 +3,291 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KTT Power Plan</title>
+<title>Grid Outage Planner</title>
 <style>
-:root{--ink:#19212a;--muted:#5f6c75;--line:#dce3e8;--green:#2a9d8f;--red:#d95f5f;--teal:#006d77;--amber:#f4a261;--bg:#f7fafb;}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg)}header{padding:18px 20px;background:#fff;border-bottom:1px solid var(--line)}h1{margin:0 0 5px;font-size:24px;letter-spacing:0}p{line-height:1.45}main{max-width:1120px;margin:0 auto;padding:16px}section{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.kpi{border-left:5px solid var(--teal);padding:8px 10px;background:#f8fbfc}.kpi b{display:block;font-size:18px}canvas{width:100%;height:260px;border:1px solid var(--line);border-radius:6px;background:#fff}.heat{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid var(--line);padding:6px;text-align:center;white-space:nowrap}th:first-child,td:first-child{position:sticky;left:0;background:#fff;text-align:left;z-index:1}.on{background:var(--green);color:#fff;font-weight:bold}.off{background:var(--red);color:#fff;font-weight:bold}.caption{color:var(--muted);font-size:13px;margin-top:8px}.sms{font-family:Consolas,monospace;background:#f3f6f7;padding:8px;border-radius:6px}@media(max-width:760px){.kpis{grid-template-columns:1fr}h1{font-size:21px}canvas{height:230px}}
+:root{--ink:#17212b;--muted:#60707d;--line:#d9e2e8;--panel:#fff;--bg:#f4f7f8;--rail:#11191f;--teal:#006d77;--green:#2a9d8f;--red:#d95f5f;--amber:#f4a261;--blue:#457b9d}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg)}header{background:#fff;border-bottom:1px solid var(--line);padding:14px 18px;position:sticky;top:0;z-index:5}h1{font-size:23px;margin:0 0 4px;letter-spacing:0}h2{font-size:17px;margin:0}h3{font-size:14px;margin:12px 0 7px}p{line-height:1.42}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}select,button{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff}button{background:var(--teal);color:#fff;border-color:var(--teal);cursor:pointer}.ghost{background:#fff;color:var(--teal)}main{max-width:1440px;margin:0 auto;padding:14px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:12px}.side{background:var(--rail);color:#dce7eb;border-radius:8px;padding:12px;position:sticky;top:92px;align-self:start;max-height:calc(100vh - 108px);overflow:auto}.side h2,.side h3{color:#fff}.muted{color:var(--muted);font-size:13px}.side .muted{color:#9eb1bb}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0;margin-bottom:10px;overflow:hidden}.panel>summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:bold;display:flex;justify-content:space-between;gap:12px;align-items:center;background:#fbfdfe;border-bottom:1px solid var(--line)}.panel>summary::-webkit-details-marker{display:none}.panel>summary:after{content:"+";font-size:18px;color:var(--teal)}.panel[open]>summary:after{content:"-"}details.panel>*:not(summary){margin-left:14px;margin-right:14px}.panel-pad{padding:12px 14px}.two{display:grid;grid-template-columns:1.35fr .65fr;gap:12px}.kpi{background:#fff;border:1px solid var(--line);border-left:5px solid var(--teal);padding:9px;border-radius:7px}.kpi b{display:block;font-size:19px;margin-top:3px}.caption{color:var(--muted);font-size:13px;margin:8px 0 12px}.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#edf5f6;color:#124f57;font-size:12px;margin:2px}.risk-high{background:#ffe9e4;color:#8a231a}.risk-ok{background:#e7f6f2;color:#1d6a60}.risk-mid{background:#fff3e8;color:#9b5400}.hosted{background:#ecf4ff;color:#1d5275}canvas{width:100%;height:280px;border:1px solid var(--line);border-radius:6px;background:#fff}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}th{background:#f2f6f8}.heat th,.heat td{text-align:center;white-space:nowrap}.heat th:first-child,.heat td:first-child{position:sticky;left:0;background:#fff;text-align:left;z-index:1}.on{background:var(--green);color:#fff;font-weight:bold}.off{background:var(--red);color:#fff;font-weight:bold}.sms{font-family:Consolas,monospace;background:#f3f6f7;padding:9px;border-radius:6px;margin:8px 0}.decision,.signal{border-left:4px solid var(--amber);padding:8px 10px;background:#fffaf3;margin:8px 0}.signal{background:#152229;border-color:#2a9d8f;color:#dce7eb}.signal b{color:#fff}.small-list{max-height:320px;overflow:auto}.status-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin:8px 0 12px}.dot{width:12px;height:12px;border-radius:50%;display:inline-block;background:#2a9d8f}.dot.amber{background:#f4a261}.dot.red{background:#d95f5f}.side-note{font-size:12px;border-top:1px solid #2d3b44;border-bottom:1px solid #2d3b44;padding:9px 0;margin:8px 0 12px}.summary-note{font-weight:normal;color:var(--muted);font-size:12px}.notice{background:#eef6f8;border:1px solid #d4e6ea;border-radius:8px;padding:10px 12px;margin-bottom:10px}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.tabs a{font-size:13px;text-decoration:none;color:#15323a;background:#e9f2f3;border:1px solid #d0e2e5;padding:6px 10px;border-radius:6px}.list-table td:last-child{font-family:Consolas,monospace;font-size:11px}.tag{display:inline-block;padding:2px 6px;border-radius:999px;background:#f1f5f8;color:#30424f;font-size:11px;margin:2px 4px 2px 0}.voice-box{background:#f7fafb;border:1px solid var(--line);border-radius:8px;padding:10px 12px}.mini{font-size:12px}.tight p{margin:8px 0}@media(max-width:1080px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.two,.layout{grid-template-columns:1fr}.side{position:static;max-height:none}}@media(max-width:720px){header{position:static}.grid{grid-template-columns:1fr}canvas{height:235px}}
 </style>
 </head>
 <body>
 <header>
-  <h1>KTT Power Plan: Salon</h1>
-  <p>24-hour outage forecast and appliance plan for a low-bandwidth small business workflow.</p>
+  <div class="top">
+    <div>
+      <h1>Grid Outage Planner</h1>
+      <div class="muted" id="subTitle">Hosted static dashboard for outage risk, appliance decisions, and small-business action planning.</div>
+    </div>
+    <div class="controls">
+      <label for="business">Business</label>
+      <select id="business"></select>
+      <button id="playVoice">Play browser voice</button>
+      <span class="pill hosted">Hugging Face static view</span>
+    </div>
+  </div>
 </header>
 <main>
-  <section class="kpis">
-    <div class="kpi"><span>Model check</span><b>Brier 0.1216, duration MAE 41.22 min, median lead 24.0 h</b></div>
-    <div class="kpi"><span>Worst window</span><b id="worstWindow">loading</b></div>
-    <div class="kpi"><span>Expected weekly saved</span><b>172,484 RWF</b></div>
-  </section>
-  <section>
-    <h2>Forecast risk band</h2>
-    <canvas id="forecast" width="1000" height="280"></canvas>
-    <p class="caption">The teal line is P(outage). The blue band is uncertainty. Amber bars are risk minutes, combining outage probability with expected duration.</p>
-  </section>
-  <section>
-    <h2>Appliance plan overlay</h2>
-    <div class="heat" id="heat"></div>
-    <p class="caption">Green means keep ON. Red means switch OFF first. The rule is fixed: shed luxury before comfort, and critical appliances last.</p>
-  </section>
-  <section>
-    <h2>Morning SMS for the salon owner</h2>
-    <p class="sms">KTT Power: Salon today. High risk <span id="smsWindow">loading</span>. Keep clippers/lights ready. Delay dryer if alert turns red.</p>
-  </section>
+  <div class="notice"><b id="noticeTitle"></b><br><span id="noticeText"></span></div>
+  <section class="grid" id="kpis"></section>
+  <nav class="tabs" aria-label="Dashboard sections">
+    <a href="#overview">Overview</a>
+    <a href="#plan">Appliance plan</a>
+    <a href="#channels">SMS and voice</a>
+    <a href="#evidence">Evidence</a>
+    <a href="#technical">Technical checks</a>
+  </nav>
+  <div class="layout">
+    <aside class="side">
+      <h2>Risk monitor</h2>
+      <div class="muted">24 hourly risk dots</div>
+      <div id="statusStrip" class="status-strip"></div>
+      <div class="side-note">Green is low risk, amber is prepare, red is high risk. Run the localhost dashboard for live updates from new alerts and incoming measurements.</div>
+      <h3>Top future drivers</h3>
+      <div id="driverList"></div>
+      <h3>Snapshot details</h3>
+      <div class="muted" id="snapshotMeta"></div>
+    </aside>
+    <section>
+      <details class="panel" id="overview" open>
+        <summary>Overview <span class="summary-note">Forecast, business impact, and highest-risk window</span></summary>
+        <div class="two panel-pad">
+          <div>
+            <h2>24-hour risk forecast</h2>
+            <canvas id="forecast" width="1000" height="300"></canvas>
+            <p class="caption">The line shows outage risk. The shaded band shows uncertainty. Orange bars show expected minutes at risk for that hour.</p>
+          </div>
+          <div class="tight">
+            <h2>Main insight</h2>
+            <div id="insight"></div>
+          </div>
+        </div>
+      </details>
+      <details class="panel" id="plan" open>
+        <summary>Appliance ON/OFF plan <span class="summary-note">Actionable decisions by hour</span></summary>
+        <div class="panel-pad">
+          <div class="table-wrap heat" id="heat"></div>
+          <p class="caption">Green means keep ON. Red means switch OFF first. The decision rule always sheds luxury before comfort, and comfort before critical.</p>
+          <h3>Hourly decisions</h3>
+          <div class="small-list" id="decisions"></div>
+        </div>
+      </details>
+      <details class="panel" id="channels">
+        <summary>SMS and voice workflow <span class="summary-note">Low-bandwidth and non-reader adaptation</span></summary>
+        <div class="two panel-pad">
+          <div>
+            <h2>Morning SMS digest</h2>
+            <div id="sms"></div>
+            <h3>Simple local-language support</h3>
+            <div id="localized"></div>
+          </div>
+          <div>
+            <h2>Voice workflow</h2>
+            <div class="voice-box" id="voiceStatus"></div>
+            <h3>Offline rule</h3>
+            <div id="offline"></div>
+          </div>
+        </div>
+      </details>
+      <details class="panel" id="evidence">
+        <summary>Evidence and ground realities <span class="summary-note">Why risk rises and how the design fits the local setting</span></summary>
+        <div class="two panel-pad">
+          <div>
+            <h2>Why outage risk rises</h2>
+            <div id="factors"></div>
+          </div>
+          <div>
+            <h2>Ground realities implemented</h2>
+            <div id="realities"></div>
+          </div>
+        </div>
+      </details>
+      <details class="panel" id="technical">
+        <summary>Technical checks and parameters <span class="summary-note">For evaluators who want detail</span></summary>
+        <div class="two panel-pad">
+          <div>
+            <h2>Forecast quality checks</h2>
+            <div id="quality"></div>
+            <p class="caption">These numbers are included for technical judges. A business owner mainly needs the risk window and the appliance actions.</p>
+          </div>
+          <div>
+            <h2>Business parameters</h2>
+            <div id="businessParams"></div>
+            <h3>Appliance parameters</h3>
+            <div class="table-wrap" id="applianceParams"></div>
+          </div>
+        </div>
+      </details>
+    </section>
+  </div>
 </main>
 <script>
-const forecast=[{"timestamp":"2026-04-23 00:00","p_outage":0.2219,"p_low":0.0503,"p_high":0.3935,"expected_duration_min":48.1,"risk_minutes":10.66,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.46), heavy rain (0.26), vegetation exposure (0.24)"},{"timestamp":"2026-04-23 01:00","p_outage":0.1046,"p_low":0.0075,"p_high":0.2018,"expected_duration_min":52.5,"risk_minutes":5.49,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.47), vegetation exposure (0.23), heavy rain (0.23)"},{"timestamp":"2026-04-23 02:00","p_outage":0.116,"p_low":0.0309,"p_high":0.201,"expected_duration_min":57.2,"risk_minutes":6.63,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), heavy rain (0.33), vegetation exposure (0.27)"},{"timestamp":"2026-04-23 03:00","p_outage":0.0458,"p_low":0.0,"p_high":0.1233,"expected_duration_min":48.6,"risk_minutes":2.22,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.48), vegetation exposure (0.17), protection coordination risk (0.17)"},{"timestamp":"2026-04-23 04:00","p_outage":0.0514,"p_low":0.0,"p_high":0.1296,"expected_duration_min":52.5,"risk_minutes":2.7,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), vegetation exposure (0.21), feeder congestion (0.19)"},{"timestamp":"2026-04-23 05:00","p_outage":0.0575,"p_low":0.0,"p_high":0.1425,"expected_duration_min":55.0,"risk_minutes":3.16,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), vegetation exposure (0.23), feeder congestion (0.18)"},{"timestamp":"2026-04-23 06:00","p_outage":0.0771,"p_low":0.0,"p_high":0.1831,"expected_duration_min":70.8,"risk_minutes":5.45,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), feeder congestion (0.21), vegetation exposure (0.20)"},{"timestamp":"2026-04-23 07:00","p_outage":0.1231,"p_low":0.0,"p_high":0.2664,"expected_duration_min":84.4,"risk_minutes":10.39,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.52), feeder congestion (0.27), vegetation exposure (0.18)"},{"timestamp":"2026-04-23 08:00","p_outage":0.218,"p_low":0.038,"p_high":0.398,"expected_duration_min":72.4,"risk_minutes":15.79,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.54), high local demand (0.39), vegetation exposure (0.27)"},{"timestamp":"2026-04-23 09:00","p_outage":0.3877,"p_low":0.2077,"p_high":0.5677,"expected_duration_min":85.3,"risk_minutes":33.07,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.54), high local demand (0.48), feeder congestion (0.32)"},{"timestamp":"2026-04-23 10:00","p_outage":0.5492,"p_low":0.3692,"p_high":0.7292,"expected_duration_min":79.9,"risk_minutes":43.88,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.55), high local demand (0.51), heavy rain (0.42)"},{"timestamp":"2026-04-23 11:00","p_outage":0.2625,"p_low":0.0825,"p_high":0.4425,"expected_duration_min":61.2,"risk_minutes":16.06,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.47), DER/backup readiness risk (0.18), vegetation exposure (0.17)"},{"timestamp":"2026-04-23 12:00","p_outage":0.1584,"p_low":0.0,"p_high":0.3384,"expected_duration_min":71.2,"risk_minutes":11.28,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.49), vegetation exposure (0.20), heavy rain (0.13)"},{"timestamp":"2026-04-23 13:00","p_outage":0.2608,"p_low":0.0808,"p_high":0.4408,"expected_duration_min":75.8,"risk_minutes":19.76,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.51), heavy rain (0.32), vegetation exposure (0.26)"},{"timestamp":"2026-04-23 14:00","p_outage":0.1537,"p_low":0.0,"p_high":0.3337,"expected_duration_min":54.5,"risk_minutes":8.38,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.46), vegetation exposure (0.16), protection coordination risk (0.15)"},{"timestamp":"2026-04-23 15:00","p_outage":0.1509,"p_low":0.0,"p_high":0.3309,"expected_duration_min":63.6,"risk_minutes":9.59,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.49), vegetation exposure (0.19), feeder congestion (0.17)"},{"timestamp":"2026-04-23 16:00","p_outage":0.2447,"p_low":0.0647,"p_high":0.4247,"expected_duration_min":78.2,"risk_minutes":19.12,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.52), feeder congestion (0.23), high local demand (0.22)"},{"timestamp":"2026-04-23 17:00","p_outage":0.6225,"p_low":0.4425,"p_high":0.8025,"expected_duration_min":100.8,"risk_minutes":62.77,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.67), asset health risk (0.61), low reserve margin (0.60)"},{"timestamp":"2026-04-23 18:00","p_outage":0.5957,"p_low":0.4157,"p_high":0.7757,"expected_duration_min":80.9,"risk_minutes":48.2,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.64), feeder congestion (0.63), high local demand (0.57)"},{"timestamp":"2026-04-23 19:00","p_outage":0.6341,"p_low":0.4541,"p_high":0.8141,"expected_duration_min":99.8,"risk_minutes":63.27,"top_risk_factor":"load_stress_index","risk_explanation":"Main drivers: high local demand (0.73), feeder congestion (0.71), low reserve margin (0.64)"},{"timestamp":"2026-04-23 20:00","p_outage":0.5476,"p_low":0.3676,"p_high":0.7276,"expected_duration_min":80.1,"risk_minutes":43.85,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.67), asset health risk (0.61), high local demand (0.60)"},{"timestamp":"2026-04-23 21:00","p_outage":0.586,"p_low":0.406,"p_high":0.766,"expected_duration_min":104.8,"risk_minutes":61.42,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.59), asset health risk (0.57), high local demand (0.50)"},{"timestamp":"2026-04-23 22:00","p_outage":0.4211,"p_low":0.2411,"p_high":0.6011,"expected_duration_min":79.5,"risk_minutes":33.46,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.52), feeder congestion (0.31), vegetation exposure (0.22)"},{"timestamp":"2026-04-23 23:00","p_outage":0.1923,"p_low":0.0123,"p_high":0.3723,"expected_duration_min":77.9,"risk_minutes":14.98,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.47), feeder congestion (0.20), fuel supply risk (0.19)"}];
-const appliances=["Hair clippers","Hair dryer","Hair straightener","LED lighting","Mobile money router","Phone charging","TV/radio"];
-const hours=["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"];
-const plan={"Hair clippers":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Hair dryer":["OFF","ON","OFF","ON","ON","ON","ON","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF"],"Hair straightener":["OFF","ON","OFF","ON","ON","ON","ON","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF"],"LED lighting":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Mobile money router":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Phone charging":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"TV/radio":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"]};
-function worstWindow(){
-  let best=forecast[0]; for(const f of forecast) if(f.risk_minutes>best.risk_minutes) best=f;
-  const dt=new Date(best.timestamp.replace(" ","T")); const h=String(dt.getHours()).padStart(2,"0");
-  const label=h+":00-"+String((dt.getHours()+1)%24).padStart(2,"0")+":00";
-  document.getElementById("worstWindow").textContent=label+" ("+Math.round(best.p_outage*100)+"%)";
-  document.getElementById("smsWindow").textContent=label;
+const ui={"generated_at":"2026-04-23T16:04:00.143941+00:00","plain_language":{"what_it_does":"Shows when outage risk is high and tells each small business what to keep ON or switch OFF.","decision_rule":"Protect critical revenue appliances first. Shed luxury first, then comfort, then critical only if power is still not enough.","no_ml_background_needed":"The dashboard explains the forecast as risk, duration, and appliance actions. The technical metrics are included for judges but not required to use the plan."},"metrics":{"brier_score":0.1216,"duration_mae_min":41.22,"lead_time_threshold":0.1,"median_lead_time_hours":24.0,"lead_time_coverage":1.0,"holdout_hours":721,"holdout_outage_hours":29,"train_seconds":1.311,"full_train_seconds":1.407,"forecast_response_ms":10.84},"forecast":[{"timestamp":"2026-04-23 00:00","p_outage":0.2219,"p_low":0.0503,"p_high":0.3935,"expected_duration_min":48.1,"risk_minutes":10.66,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.46), heavy rain (0.26), vegetation exposure (0.24)"},{"timestamp":"2026-04-23 01:00","p_outage":0.1046,"p_low":0.0075,"p_high":0.2018,"expected_duration_min":52.5,"risk_minutes":5.49,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.47), vegetation exposure (0.23), heavy rain (0.23)"},{"timestamp":"2026-04-23 02:00","p_outage":0.116,"p_low":0.0309,"p_high":0.201,"expected_duration_min":57.2,"risk_minutes":6.63,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), heavy rain (0.33), vegetation exposure (0.27)"},{"timestamp":"2026-04-23 03:00","p_outage":0.0458,"p_low":0.0,"p_high":0.1233,"expected_duration_min":48.6,"risk_minutes":2.22,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.48), vegetation exposure (0.17), protection coordination risk (0.17)"},{"timestamp":"2026-04-23 04:00","p_outage":0.0514,"p_low":0.0,"p_high":0.1296,"expected_duration_min":52.5,"risk_minutes":2.7,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), vegetation exposure (0.21), feeder congestion (0.19)"},{"timestamp":"2026-04-23 05:00","p_outage":0.0575,"p_low":0.0,"p_high":0.1425,"expected_duration_min":55.0,"risk_minutes":3.16,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), vegetation exposure (0.23), feeder congestion (0.18)"},{"timestamp":"2026-04-23 06:00","p_outage":0.0771,"p_low":0.0,"p_high":0.1831,"expected_duration_min":70.8,"risk_minutes":5.45,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.50), feeder congestion (0.21), vegetation exposure (0.20)"},{"timestamp":"2026-04-23 07:00","p_outage":0.1231,"p_low":0.0,"p_high":0.2664,"expected_duration_min":84.4,"risk_minutes":10.39,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.52), feeder congestion (0.27), vegetation exposure (0.18)"},{"timestamp":"2026-04-23 08:00","p_outage":0.218,"p_low":0.038,"p_high":0.398,"expected_duration_min":72.4,"risk_minutes":15.79,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.54), high local demand (0.39), vegetation exposure (0.27)"},{"timestamp":"2026-04-23 09:00","p_outage":0.3877,"p_low":0.2077,"p_high":0.5677,"expected_duration_min":85.3,"risk_minutes":33.07,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.54), high local demand (0.48), feeder congestion (0.32)"},{"timestamp":"2026-04-23 10:00","p_outage":0.5492,"p_low":0.3692,"p_high":0.7292,"expected_duration_min":79.9,"risk_minutes":43.88,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.55), high local demand (0.51), heavy rain (0.42)"},{"timestamp":"2026-04-23 11:00","p_outage":0.2625,"p_low":0.0825,"p_high":0.4425,"expected_duration_min":61.2,"risk_minutes":16.06,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.47), DER/backup readiness risk (0.18), vegetation exposure (0.17)"},{"timestamp":"2026-04-23 12:00","p_outage":0.1584,"p_low":0.0,"p_high":0.3384,"expected_duration_min":71.2,"risk_minutes":11.28,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.49), vegetation exposure (0.20), heavy rain (0.13)"},{"timestamp":"2026-04-23 13:00","p_outage":0.2608,"p_low":0.0808,"p_high":0.4408,"expected_duration_min":75.8,"risk_minutes":19.76,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.51), heavy rain (0.32), vegetation exposure (0.26)"},{"timestamp":"2026-04-23 14:00","p_outage":0.1537,"p_low":0.0,"p_high":0.3337,"expected_duration_min":54.5,"risk_minutes":8.38,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.46), vegetation exposure (0.16), protection coordination risk (0.15)"},{"timestamp":"2026-04-23 15:00","p_outage":0.1509,"p_low":0.0,"p_high":0.3309,"expected_duration_min":63.6,"risk_minutes":9.59,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.49), vegetation exposure (0.19), feeder congestion (0.17)"},{"timestamp":"2026-04-23 16:00","p_outage":0.2447,"p_low":0.0647,"p_high":0.4247,"expected_duration_min":78.2,"risk_minutes":19.12,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.52), feeder congestion (0.23), high local demand (0.22)"},{"timestamp":"2026-04-23 17:00","p_outage":0.6225,"p_low":0.4425,"p_high":0.8025,"expected_duration_min":100.8,"risk_minutes":62.77,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.67), asset health risk (0.61), low reserve margin (0.60)"},{"timestamp":"2026-04-23 18:00","p_outage":0.5957,"p_low":0.4157,"p_high":0.7757,"expected_duration_min":80.9,"risk_minutes":48.2,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.64), feeder congestion (0.63), high local demand (0.57)"},{"timestamp":"2026-04-23 19:00","p_outage":0.6341,"p_low":0.4541,"p_high":0.8141,"expected_duration_min":99.8,"risk_minutes":63.27,"top_risk_factor":"load_stress_index","risk_explanation":"Main drivers: high local demand (0.73), feeder congestion (0.71), low reserve margin (0.64)"},{"timestamp":"2026-04-23 20:00","p_outage":0.5476,"p_low":0.3676,"p_high":0.7276,"expected_duration_min":80.1,"risk_minutes":43.85,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.67), asset health risk (0.61), high local demand (0.60)"},{"timestamp":"2026-04-23 21:00","p_outage":0.586,"p_low":0.406,"p_high":0.766,"expected_duration_min":104.8,"risk_minutes":61.42,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.59), asset health risk (0.57), high local demand (0.50)"},{"timestamp":"2026-04-23 22:00","p_outage":0.4211,"p_low":0.2411,"p_high":0.6011,"expected_duration_min":79.5,"risk_minutes":33.46,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.52), feeder congestion (0.31), vegetation exposure (0.22)"},{"timestamp":"2026-04-23 23:00","p_outage":0.1923,"p_low":0.0123,"p_high":0.3723,"expected_duration_min":77.9,"risk_minutes":14.98,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.47), feeder congestion (0.20), fuel supply risk (0.19)"}],"hours":["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00","23:00"],"businesses":{"salon":{"name":"salon","display_name":"Neighborhood salon","backup_limit_w":700,"risk_threshold":0.11,"appliances":["LED lighting","Phone charging","Mobile money router","Hair clippers","Hair dryer","Hair straightener","TV/radio"],"notes":"Small inverter can keep clippers, lights, payments, and one mid-load tool, but not the dryer."},"cold_room":{"name":"cold_room","display_name":"Cold room kiosk","backup_limit_w":360,"risk_threshold":0.09,"appliances":["Chest freezer","LED lighting","Phone charging","Mobile money router"],"notes":"Backup is reserved for the freezer and payment/lighting basics."},"tailor":{"name":"tailor","display_name":"Tailor shop","backup_limit_w":500,"risk_threshold":0.1,"appliances":["Sewing machine","Electric iron","LED lighting","Phone charging","Mobile money router","TV/radio"],"notes":"Sewing continues on backup; ironing is delayed during high-risk hours."}},"plans":{"salon":{"LED lighting":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Phone charging":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Mobile money router":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Hair clippers":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Hair dryer":["OFF","ON","OFF","ON","ON","ON","ON","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF"],"Hair straightener":["OFF","ON","OFF","ON","ON","ON","ON","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF"],"TV/radio":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"]},"cold_room":{"Chest freezer":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"LED lighting":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Phone charging":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Mobile money router":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"]},"tailor":{"Sewing machine":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Electric iron":["OFF","OFF","OFF","ON","ON","ON","ON","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF","OFF"],"LED lighting":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Phone charging":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"Mobile money router":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"],"TV/radio":["ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON","ON"]}},"impact":{"salon":{"daily_expected_saved_rwf":24641.0,"weekly_expected_saved_rwf":172484.0,"method":"24-hour expected preserved revenue scaled to a typical week"},"cold_room":{"daily_expected_saved_rwf":33236.0,"weekly_expected_saved_rwf":232649.0,"method":"24-hour expected preserved revenue scaled to a typical week"},"tailor":{"daily_expected_saved_rwf":25547.0,"weekly_expected_saved_rwf":178830.0,"method":"24-hour expected preserved revenue scaled to a typical week"}},"summaries":{"salon":{"hours":24,"appliance_hours":168,"off_appliance_hours":38,"expected_revenue_rwf":129241.6},"cold_room":{"hours":24,"appliance_hours":96,"off_appliance_hours":0,"expected_revenue_rwf":146347.9},"tailor":{"hours":24,"appliance_hours":144,"off_appliance_hours":20,"expected_revenue_rwf":119235.04}},"decision_summary":{"salon":[{"timestamp":"2026-04-23 00:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 01:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","Hair dryer","Hair straightener","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 02:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 03:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","Hair dryer","Hair straightener","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 04:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","Hair dryer","Hair straightener","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 05:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","Hair dryer","Hair straightener","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 06:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","Hair dryer","Hair straightener","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 07:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 08:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 09:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 10:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 11:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 12:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 13:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 14:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 15:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 16:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 17:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 18:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 19:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 20:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 21:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 22:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"},{"timestamp":"2026-04-23 23:00","off":["Hair dryer","Hair straightener"],"on":["LED lighting","Phone charging","Mobile money router","Hair clippers","TV/radio"],"action":"Switch OFF: Hair dryer, Hair straightener"}],"cold_room":[{"timestamp":"2026-04-23 00:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 01:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 02:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 03:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 04:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 05:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 06:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 07:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 08:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 09:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 10:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 11:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 12:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 13:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 14:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 15:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 16:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 17:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 18:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 19:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 20:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 21:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 22:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"},{"timestamp":"2026-04-23 23:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Chest freezer"],"action":"All appliances ON"}],"tailor":[{"timestamp":"2026-04-23 00:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 01:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 02:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 03:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","Electric iron","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 04:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","Electric iron","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 05:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","Electric iron","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 06:00","off":[],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","Electric iron","TV/radio"],"action":"All appliances ON"},{"timestamp":"2026-04-23 07:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 08:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 09:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 10:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 11:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 12:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 13:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 14:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 15:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 16:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 17:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 18:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 19:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 20:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 21:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 22:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"},{"timestamp":"2026-04-23 23:00","off":["Electric iron"],"on":["LED lighting","Phone charging","Mobile money router","Sewing machine","TV/radio"],"action":"Switch OFF: Electric iron"}]},"sms_digest":[{"message":"Power Plan: Salon today. Highest risk 19:00-20:00. Keep lights, clippers and payments ready; delay dryer when alert is red.","characters":123},{"message":"If outage hits: OFF dryer and straightener first. Keep lights, clippers, phone charging, payments; TV only if backup allows.","characters":124},{"message":"No internet at 13:00? Use cached plan until 6h old. After that run critical-only mode: lights, clippers, phone and payments.","characters":124}],"localized_messages":{"en":["Dryer OFF when alert is red.","Keep lights, clippers, phone charging and payments ON.","No internet: use cached plan for 6 hours, then critical-only mode."],"rw_simple":["Funga dryer niba ibara ritukura.","Cana amatara, clippers, telefone na mobile money.","Nta internet: koresha plan ibitswe amasaha 6, nyuma ukoreshe ibya ngombwa gusa."]},"offline_policy":{"maximum_staleness_hours":6,"risk_budget":"Stop trusting the plan after 6 hours or when risk may have shifted by about 15 percentage points.","fallback":"Critical-only mode: keep lights, clippers, phone charging, and mobile money router ON; switch dryer, straightener, and TV/radio OFF."},"non_reader_workflow":{"interface":"colored LED relay board plus voice prompt","green":"appliance stays ON","red":"switch appliance OFF first","amber":"prepare to switch off if outage starts","voice_prompt_example":"Dryer off. Clippers on. Lights on."},"worst_forecast_window":{"start":"19:00","end":"20:00","label":"19:00-20:00","p_outage":0.6341,"risk_minutes":63.27},"factor_counts":[{"name":"feeder congestion","count":85},{"name":"voltage drop","count":79},{"name":"routine load","count":72},{"name":"heavy rain","count":59},{"name":"asset health","count":43},{"name":"maintenance","count":9},{"name":"low reserve margin","count":8},{"name":"hydro inflow stress","count":4}],"top_windows":[{"timestamp":"2026-04-23 19:00","p_outage":0.6341,"p_low":0.4541,"p_high":0.8141,"expected_duration_min":99.8,"risk_minutes":63.27,"top_risk_factor":"load_stress_index","risk_explanation":"Main drivers: high local demand (0.73), feeder congestion (0.71), low reserve margin (0.64)"},{"timestamp":"2026-04-23 17:00","p_outage":0.6225,"p_low":0.4425,"p_high":0.8025,"expected_duration_min":100.8,"risk_minutes":62.77,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.67), asset health risk (0.61), low reserve margin (0.60)"},{"timestamp":"2026-04-23 21:00","p_outage":0.586,"p_low":0.406,"p_high":0.766,"expected_duration_min":104.8,"risk_minutes":61.42,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.59), asset health risk (0.57), high local demand (0.50)"},{"timestamp":"2026-04-23 18:00","p_outage":0.5957,"p_low":0.4157,"p_high":0.7757,"expected_duration_min":80.9,"risk_minutes":48.2,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.64), feeder congestion (0.63), high local demand (0.57)"},{"timestamp":"2026-04-23 10:00","p_outage":0.5492,"p_low":0.3692,"p_high":0.7292,"expected_duration_min":79.9,"risk_minutes":43.88,"top_risk_factor":"asset_health_index","risk_explanation":"Main drivers: asset health risk (0.55), high local demand (0.51), heavy rain (0.42)"},{"timestamp":"2026-04-23 20:00","p_outage":0.5476,"p_low":0.3676,"p_high":0.7276,"expected_duration_min":80.1,"risk_minutes":43.85,"top_risk_factor":"feeder_congestion_index","risk_explanation":"Main drivers: feeder congestion (0.67), asset health risk (0.61), high local demand (0.60)"}],"taxonomy_groups":[{"group":"Generation adequacy","prototype_fields":["reserve_margin_index","fuel_supply_risk_index","hydro_inflow_stress_index"]},{"group":"Transmission and substations","prototype_fields":["asset_health_index","vegetation_risk_index","voltage_drop_index"]},{"group":"Distribution network","prototype_fields":["feeder_congestion_index","non_technical_loss_index","voltage_drop_index"]},{"group":"System operations","prototype_fields":["reserve_margin_index","protection_miscoordination_index"]},{"group":"Environment","prototype_fields":["rain_stress_index","wind_stress_index","vegetation_risk_index"]},{"group":"Organization and maintenance","prototype_fields":["maintenance_flag","asset_health_index"]},{"group":"Digital and cyber-physical systems","prototype_fields":["scada_telecom_risk_index"]},{"group":"Policy and market architecture","prototype_fields":["fuel_supply_risk_index","asset_health_index"]}],"factor_summary":{"history_rows":8760,"history_days":365.0,"outage_hours":359,"outage_rate":0.041,"driver_counts_on_outage_hours":{"feeder_congestion":85,"voltage_drop":79,"routine_load":72,"heavy_rain":59,"asset_health":43,"maintenance":9,"low_reserve_margin":8,"hydro_inflow_stress":4},"average_factor_values":{"load_stress_index":0.199,"rain_stress_index":0.116,"wind_stress_index":0.041,"feeder_congestion_index":0.258,"voltage_drop_index":0.195,"maintenance_flag":0.016,"neighbor_outage_reports":0.075,"transformer_age_years":8.995,"payment_day_flag":0.082,"reserve_margin_index":0.171,"fuel_supply_risk_index":0.125,"hydro_inflow_stress_index":0.213,"vegetation_risk_index":0.251,"protection_miscoordination_index":0.19,"scada_telecom_risk_index":0.077,"non_technical_loss_index":0.201,"asset_health_index":0.566,"der_backup_risk_index":0.191}},"appliance_lookup":{"LED lighting":{"category":"critical","watts_avg":45,"start_up_spike_w":50,"revenue_if_running_rwf_per_h":1200},"Phone charging":{"category":"critical","watts_avg":20,"start_up_spike_w":25,"revenue_if_running_rwf_per_h":800},"Mobile money router":{"category":"critical","watts_avg":18,"start_up_spike_w":30,"revenue_if_running_rwf_per_h":900},"Hair clippers":{"category":"critical","watts_avg":35,"start_up_spike_w":70,"revenue_if_running_rwf_per_h":2600},"Hair dryer":{"category":"comfort","watts_avg":1200,"start_up_spike_w":1600,"revenue_if_running_rwf_per_h":3500},"Hair straightener":{"category":"comfort","watts_avg":650,"start_up_spike_w":800,"revenue_if_running_rwf_per_h":2800},"Chest freezer":{"category":"critical","watts_avg":220,"start_up_spike_w":850,"revenue_if_running_rwf_per_h":5600},"Sewing machine":{"category":"critical","watts_avg":140,"start_up_spike_w":360,"revenue_if_running_rwf_per_h":3200},"Electric iron":{"category":"comfort","watts_avg":1000,"start_up_spike_w":1300,"revenue_if_running_rwf_per_h":2400},"TV/radio":{"category":"luxury","watts_avg":90,"start_up_spike_w":120,"revenue_if_running_rwf_per_h":300}},"hosted_notice":{"title":"Hosted static snapshot","message":"This Hugging Face page shows the latest generated report. The full live dashboard, rebuild action, incoming-data API, SMS delivery, and saved voice notes run from dashboard.py on localhost."}};
+function byId(id){return document.getElementById(id)}
+function fmt(n,d=0){return Number(n).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d})}
+function money(n){return fmt(n,0)+" RWF"}
+function riskClass(p){if(p>=0.35)return "risk-high"; if(p>=0.10)return "risk-mid"; return "risk-ok"}
+function setupBusiness(){
+  const sel=byId("business");
+  const current=sel.value||"salon";
+  sel.innerHTML=Object.keys(ui.businesses).map(function(key){return "<option value='"+key+"'>"+(ui.businesses[key].display_name||key)+"</option>"}).join("");
+  sel.value=ui.businesses[current]?current:"salon";
 }
-function drawForecast(){
-  const c=document.getElementById("forecast"),ctx=c.getContext("2d"),w=c.width,h=c.height,pad=42;
-  ctx.clearRect(0,0,w,h); ctx.strokeStyle="#dce3e8"; ctx.lineWidth=1; ctx.font="12px Arial";
-  for(let i=0;i<=4;i++){let y=pad+(h-2*pad)*i/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke();ctx.fillStyle="#5f6c75";ctx.fillText(((4-i)*25)+"%",8,y+4);}
-  const maxRisk=Math.max(...forecast.map(f=>f.risk_minutes),1), sx=i=>pad+i*(w-2*pad)/(forecast.length-1), sy=p=>h-pad-p*(h-2*pad);
-  forecast.forEach((f,i)=>{let bh=(f.risk_minutes/maxRisk)*(h-2*pad)*.45;ctx.fillStyle="rgba(244,162,97,.45)";ctx.fillRect(sx(i)-8,h-pad-bh,16,bh);});
-  ctx.beginPath(); forecast.forEach((f,i)=>{let y=sy(f.p_high); if(i===0)ctx.moveTo(sx(i),y); else ctx.lineTo(sx(i),y);});
-  [...forecast].reverse().forEach((f,j)=>{let i=forecast.length-1-j;ctx.lineTo(sx(i),sy(f.p_low));}); ctx.closePath(); ctx.fillStyle="rgba(168,218,220,.6)"; ctx.fill();
-  ctx.beginPath(); forecast.forEach((f,i)=>{let y=sy(f.p_outage); if(i===0)ctx.moveTo(sx(i),y); else ctx.lineTo(sx(i),y);}); ctx.strokeStyle="#006d77"; ctx.lineWidth=3; ctx.stroke();
-  ctx.fillStyle="#19212a"; hours.forEach((hr,i)=>{if(i%3===0)ctx.fillText(hr,sx(i)-13,h-14);});
+function activeDecision(business){
+  const rows=ui.decision_summary[business]||[];
+  for(const row of rows){if(row.off && row.off.length){return row;}}
+  return rows[0]||{off:[],on:[]};
 }
-function drawHeat(){
-  let html="<table><thead><tr><th>Appliance</th>"+hours.map(h=>"<th>"+h+"</th>").join("")+"</tr></thead><tbody>";
-  for(const a of appliances){html+="<tr><td>"+a+"</td>"; for(const st of plan[a]){html+="<td class='"+(st==="ON"?"on":"off")+"'>"+st+"</td>";} html+="</tr>";}
-  document.getElementById("heat").innerHTML=html+"</tbody></table>";
+function voiceTranscript(business){
+  const biz=ui.businesses[business];
+  const row=activeDecision(business);
+  const off=(row.off||[]).length?(row.off||[]).join(", "):"no appliance";
+  const on=(row.on||[]).length?(row.on||[]).slice(0,4).join(", "):"critical appliances";
+  return "Power Plan voice note for "+(biz.display_name||business)+". Highest outage risk is "+ui.worst_forecast_window.label+". Switch off "+off+" first. Keep "+on+" on. If internet is not available, use the cached plan for "+ui.offline_policy.maximum_staleness_hours+" hours. After that, use critical-only mode.";
 }
-worstWindow(); drawForecast(); drawHeat();
+function render(){
+  const business=byId("business").value;
+  const biz=ui.businesses[business];
+  const impact=ui.impact[business];
+  const summary=ui.summaries[business];
+  byId("noticeTitle").textContent=ui.hosted_notice.title;
+  byId("noticeText").textContent=ui.hosted_notice.message;
+  byId("subTitle").textContent=ui.plain_language.what_it_does;
+  byId("snapshotMeta").innerHTML="Generated: <b>"+ui.generated_at.slice(0,16).replace("T"," ")+"</b><br>History: <b>"+ui.factor_summary.history_days+" days</b><br>Outage rate: <b>"+Math.round(ui.factor_summary.outage_rate*1000)/10+"%</b>";
+  byId("kpis").innerHTML=[
+    ["Worst risk window",ui.worst_forecast_window.label,Math.round(ui.worst_forecast_window.p_outage*100)+"% outage risk"],
+    ["Weekly value protected",money(impact.weekly_expected_saved_rwf),"Expected preserved revenue"],
+    ["Actions produced",summary.off_appliance_hours+" OFF blocks",summary.appliance_hours+" appliance-hours checked"],
+    ["Model check","Brier "+ui.metrics.brier_score+", MAE "+ui.metrics.duration_mae_min+" min","Lead time "+ui.metrics.median_lead_time_hours+" h"]
+  ].map(function(row){return "<div class='kpi'><span>"+row[0]+"</span><b>"+row[1]+"</b><div class='muted'>"+row[2]+"</div></div>"}).join("");
+  renderStatusStrip();
+  renderDrivers();
+  renderForecast();
+  renderInsight(business);
+  renderHeat(business);
+  renderDecisions(business);
+  renderSms(business);
+  renderOffline();
+  renderFactors();
+  renderRealities();
+  renderQuality();
+  renderParams(business);
+}
+function renderStatusStrip(){
+  byId("statusStrip").innerHTML=ui.forecast.map(function(row){
+    const p=Number(row.p_outage||0);
+    const cls=p>=0.35?"red":(p>=0.10?"amber":"");
+    return "<span class='dot "+cls+"' title='"+row.timestamp.slice(11)+" risk "+Math.round(p*100)+"%'></span>";
+  }).join("");
+}
+function renderDrivers(){
+  byId("driverList").innerHTML=ui.top_windows.slice(0,5).map(function(row){
+    return "<div class='signal'><b>"+row.timestamp.slice(11)+"</b><br>"+String(row.top_risk_factor||"routine").replaceAll("_"," ")+"<br><span class='muted'>"+(row.risk_explanation||"")+"</span></div>";
+  }).join("");
+}
+function renderInsight(business){
+  const biz=ui.businesses[business];
+  const impact=ui.impact[business];
+  byId("insight").innerHTML="<p><span class='pill "+riskClass(ui.worst_forecast_window.p_outage)+"'>Highest risk "+ui.worst_forecast_window.label+"</span></p>"+
+    "<p><b>"+(biz.display_name||business)+"</b>: "+ui.plain_language.decision_rule+"</p>"+
+    "<p><b>Expected weekly value protected:</b> "+money(impact.weekly_expected_saved_rwf)+".</p>"+
+    "<p class='muted'>No ML background needed: "+ui.plain_language.no_ml_background_needed+"</p>";
+}
+function renderForecast(){
+  const c=byId("forecast"),ctx=c.getContext("2d"),w=c.width,h=c.height,pad=44,f=ui.forecast;
+  ctx.clearRect(0,0,w,h); ctx.font="12px Arial"; ctx.strokeStyle="#d9e1e7"; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){let y=pad+(h-2*pad)*i/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(w-pad,y);ctx.stroke();ctx.fillStyle="#5a6772";ctx.fillText(((4-i)*25)+"%",8,y+4)}
+  const maxRisk=Math.max.apply(null,f.map(function(x){return x.risk_minutes;}),1);
+  const sx=function(i){return pad+i*(w-2*pad)/(f.length-1)};
+  const sy=function(p){return h-pad-p*(h-2*pad)};
+  f.forEach(function(row,i){let bh=(row.risk_minutes/maxRisk)*(h-2*pad)*0.45;ctx.fillStyle="rgba(244,162,97,.45)";ctx.fillRect(sx(i)-8,h-pad-bh,16,bh)});
+  ctx.beginPath();f.forEach(function(row,i){let y=sy(row.p_high);if(i===0)ctx.moveTo(sx(i),y);else ctx.lineTo(sx(i),y)});
+  f.slice().reverse().forEach(function(row,j){let i=f.length-1-j;ctx.lineTo(sx(i),sy(row.p_low))});ctx.closePath();ctx.fillStyle="rgba(168,218,220,.6)";ctx.fill();
+  ctx.beginPath();f.forEach(function(row,i){let y=sy(row.p_outage);if(i===0)ctx.moveTo(sx(i),y);else ctx.lineTo(sx(i),y)});ctx.strokeStyle="#006d77";ctx.lineWidth=3;ctx.stroke();
+  ctx.fillStyle="#16202a";ui.hours.forEach(function(hour,i){if(i%3===0){ctx.fillText(hour,sx(i)-14,h-15)}});
+}
+function renderHeat(business){
+  const plan=ui.plans[business];
+  const appliances=ui.businesses[business].appliances;
+  let html="<table><thead><tr><th>Appliance</th>"+ui.hours.map(function(hour){return "<th>"+hour+"</th>"}).join("")+"</tr></thead><tbody>";
+  appliances.forEach(function(appliance){
+    html+="<tr><td>"+appliance+"</td>";
+    (plan[appliance]||[]).forEach(function(status){html+="<td class='"+(status==="ON"?"on":"off")+"'>"+status+"</td>"});
+    html+="</tr>";
+  });
+  byId("heat").innerHTML=html+"</tbody></table>";
+}
+function renderDecisions(business){
+  const rows=(ui.decision_summary[business]||[]).filter(function(row){return row.off && row.off.length>0});
+  const displayRows=rows.length?rows.slice(0,10):(ui.decision_summary[business]||[]).slice(0,6);
+  byId("decisions").innerHTML=displayRows.map(function(row){
+    return "<div class='decision'><b>"+row.timestamp.slice(11)+"</b>: "+row.action+"<br><span class='muted'>Kept ON: "+(row.on||[]).join(", ")+"</span></div>";
+  }).join("");
+}
+function renderSms(business){
+  byId("sms").innerHTML=ui.sms_digest.map(function(item,index){
+    return "<div class='sms'>"+(index+1)+". "+item.message+"<br><span class='muted'>"+item.characters+"/160 characters</span></div>";
+  }).join("");
+  byId("localized").innerHTML="<div class='sms mini'>EN: "+ui.localized_messages.en.join(" ")+"</div><div class='sms mini'>RW simple: "+ui.localized_messages.rw_simple.join(" ")+"</div>";
+  byId("voiceStatus").innerHTML="<b>Voice transcript</b><p>"+voiceTranscript(business)+"</p><p class='muted'>Browser speech works here. Saved WAV files and live voice-note generation stay in the localhost dashboard.</p>";
+}
+function renderOffline(){
+  const workflow=ui.non_reader_workflow;
+  byId("offline").innerHTML="<p><b>Maximum stale plan:</b> "+ui.offline_policy.maximum_staleness_hours+" hours</p>"+
+    "<p><b>Fallback:</b> "+ui.offline_policy.fallback+"</p>"+
+    "<p><b>Non-reader path:</b> "+workflow.interface+". Green = "+workflow.green+", red = "+workflow.red+", amber = "+workflow.amber+".</p>"+
+    "<p class='muted'>"+ui.offline_policy.risk_budget+"</p>";
+}
+function renderFactors(){
+  const factorRows=ui.factor_counts.map(function(item){return "<tr><td>"+item.name+"</td><td>"+item.count+"</td></tr>"}).join("") || "<tr><td>No outage drivers recorded</td><td>0</td></tr>";
+  const groupRows=ui.taxonomy_groups.map(function(item){
+    return "<tr><td>"+item.group+"</td><td>"+item.prototype_fields.join(", ")+"</td></tr>";
+  }).join("");
+  byId("factors").innerHTML="<p>Outage risk is not based on appliances. It uses grid and weather signals such as load, rain, wind, voltage drops, feeder congestion, maintenance, reserve margin, asset health, and backup readiness.</p>"+
+    "<h3>Drivers seen in outage history</h3><table class='list-table'><tbody>"+factorRows+"</tbody></table>"+
+    "<h3>Broader outage groups represented</h3><table class='list-table'><tbody>"+groupRows+"</tbody></table>";
+}
+function renderRealities(){
+  byId("realities").innerHTML="<table><tbody>"+
+    "<tr><th>Low bandwidth</th><td>Single static page with compact charts, SMS wording, and no backend dependency on the hosted view.</td></tr>"+
+    "<tr><th>Intermittent power/internet</th><td>Plan is trusted for "+ui.offline_policy.maximum_staleness_hours+" hours, then moves to critical-only mode.</td></tr>"+
+    "<tr><th>Non-smartphone user</th><td>Morning digest stays within 3 SMS messages and each message is under 160 characters.</td></tr>"+
+    "<tr><th>Multiple languages</th><td>Messages are kept in simple English and simple Kinyarwanda wording.</td></tr>"+
+    "<tr><th>Illiteracy</th><td>Browser voice playback mirrors the LED workflow: green ON, red OFF, amber prepare.</td></tr>"+
+    "</tbody></table>";
+}
+function renderQuality(){
+  const worst=ui.top_windows[0];
+  byId("quality").innerHTML="<table><tbody>"+
+    "<tr><th>Probability accuracy score</th><td>"+ui.metrics.brier_score+"</td></tr>"+
+    "<tr><th>Duration error</th><td>"+ui.metrics.duration_mae_min+" minutes</td></tr>"+
+    "<tr><th>Warning lead time</th><td>"+ui.metrics.median_lead_time_hours+" hours</td></tr>"+
+    "<tr><th>Forecast response</th><td>"+ui.metrics.forecast_response_ms+" ms</td></tr>"+
+    "<tr><th>Training time</th><td>"+ui.metrics.full_train_seconds+" seconds</td></tr>"+
+    "<tr><th>Worst future risk window</th><td>"+worst.timestamp+" with "+Math.round(worst.p_outage*100)+"% probability</td></tr>"+
+    "</tbody></table>";
+}
+function renderParams(business){
+  const biz=ui.businesses[business];
+  byId("businessParams").innerHTML="<p><b>"+(biz.display_name||business)+"</b></p><p>Backup limit: <b>"+biz.backup_limit_w+" W</b><br>Risk threshold: <b>"+Math.round(biz.risk_threshold*100)+"%</b></p><p class='muted'>"+(biz.notes||"")+"</p>";
+  const rows=biz.appliances.map(function(name){
+    const item=ui.appliance_lookup[name];
+    return "<tr><td>"+name+"</td><td>"+item.category+"</td><td>"+item.watts_avg+"</td><td>"+money(item.revenue_if_running_rwf_per_h)+"</td></tr>";
+  }).join("");
+  byId("applianceParams").innerHTML="<table><thead><tr><th>Appliance</th><th>Type</th><th>Watts</th><th>Revenue/h</th></tr></thead><tbody>"+rows+"</tbody></table>";
+}
+function playVoice(){
+  const transcript=voiceTranscript(byId("business").value);
+  byId("voiceStatus").innerHTML="<b>Voice transcript</b><p>"+transcript+"</p><p class='muted'>Playing from the browser.</p>";
+  if("speechSynthesis" in window){
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(transcript);
+    utterance.rate=0.92;
+    utterance.lang="en-US";
+    window.speechSynthesis.speak(utterance);
+  }
+}
+byId("business").addEventListener("change",render);
+byId("playVoice").addEventListener("click",playVoice);
+setupBusiness();
+render();
 </script>
 </body>
 </html>

@@ -3,7 +3,6 @@
 Full name: Simeon
 Date: 23 April 2026
 
-Honor code:
+Integrity declaration:
 
-"I will use any LLM or coding-assistant tool I find useful, and I will declare each tool I use, why I used it, and three sample prompts in my process_log.md. I will not have another human do my work. I will defend my own code in the Live Defense session. I understand undeclared LLM or human assistance is grounds for disqualification."
-
+"I used LLM and coding-assistant tools only as declared in process_log.md, including why I used them and sample prompts. I completed the work myself and did not have another human do it for me. I am prepared to explain and defend the code, assumptions, results, and product decisions in the Live Defense session. All assistance used for this submission has been declared transparently."

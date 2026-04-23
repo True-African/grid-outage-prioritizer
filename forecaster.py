@@ -1,4 +1,4 @@
-"""CPU-only outage forecaster for AIMS T2.3.
+"""CPU-only grid outage forecaster.
 
 This module avoids heavy ML dependencies. It implements:
 - weighted logistic regression for P(outage)

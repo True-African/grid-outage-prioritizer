@@ -1,4 +1,4 @@
-"""Appliance prioritizer for the AIMS T2.3 grid outage challenge."""
+"""Appliance prioritizer for the grid outage challenge."""
 
 from __future__ import annotations
 
@@ -133,4 +133,3 @@ def estimate_weekly_savings(plan_df: pd.DataFrame) -> dict[str, Any]:
         "weekly_expected_saved_rwf": round(weekly_saved, 0),
         "method": "24-hour expected preserved revenue scaled to a typical week",
     }
-

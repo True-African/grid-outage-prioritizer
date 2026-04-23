@@ -148,5 +148,5 @@
     "hydrology/fuel adequacy planning",
     "backup, solar, battery, and hybrid controller testing"
   ],
-  "scope_note": "The T2.3 brief requires an SME forecast-and-prioritization prototype. This taxonomy is used to select representative factors and to guide future utility-grade analytics."
+  "scope_note": "The challenge requires an SME forecast-and-prioritization prototype. This taxonomy is used to select representative factors and to guide future utility-grade analytics."
 }

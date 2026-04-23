@@ -1,8 +1,8 @@
 # Product And Business Digest Specification
 
-Challenge: **T2.3 Grid Outage Forecaster + Appliance Prioritizer**
+Challenge: **Grid Outage Forecaster + Appliance Prioritizer**
 
-This artifact explains how the forecast becomes an action that a real small business can use under low bandwidth, intermittent power, and mixed literacy conditions.
+This artifact explains how the forecast became an action that a real small business uses under low bandwidth, intermittent power, and mixed literacy conditions.
 
 ## 1. Users And Context
 
@@ -28,14 +28,14 @@ Maximum: 3 SMS, 160 characters each.
 
 | SMS | Characters | Message |
 |---:|---:|---|
-| 1 | 122 | KTT Power: Salon today. Highest risk 19:00-20:00. Keep lights, clippers and payments ready; delay dryer when alert is red. |
+| 1 | 119 | Power Plan: Salon today. Highest risk 19:00-20:00. Keep lights, clippers and payments ready; delay dryer when alert is red. |
 | 2 | 124 | If outage hits: OFF dryer and straightener first. Keep lights, clippers, phone charging, payments; TV only if backup allows. |
 | 3 | 124 | No internet at 13:00? Use cached plan until 6h old. After that run critical-only mode: lights, clippers, phone and payments. |
 
 Language strategy:
 
 - Default SMS is simple English because appliance names are common business terms.
-- A Kinyarwanda version can be sent from the same plan template for owners who prefer it.
+- A Kinyarwanda version is available from the same plan template for owners who prefer it.
 - The wording avoids probabilities and model jargon. It gives a time window and specific appliance actions.
 
 Simple Kinyarwanda templates used in the report:
@@ -136,7 +136,7 @@ The plan does not create new electricity. It protects the revenue that can still
 Cold room:
 
 - Critical appliance is the freezer.
-- SMS should focus on keeping the freezer and payment line on.
+- SMS focuses on keeping the freezer and payment line on.
 - Luxury/comfort loads are almost irrelevant compared with spoilage risk.
 
 Tailor:
