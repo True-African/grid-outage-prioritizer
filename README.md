@@ -1,61 +1,34 @@
 
 
+
 # Power Plan
 
-Power Plan forecasts grid outages and generates appliance-by-appliance ON/OFF plans for small businesses. It features a local dashboard, SMS/voice notifications, and clear documentation.
+Forecasts grid outages and generates appliance-by-appliance ON/OFF plans for small businesses. Simple dashboard, SMS/voice notifications, and easy setup.
+
 
 ## Quick Start
 
-**1. Install dependencies:**
 ```bash
+git clone https://github.com/True-African/grid-outage-prioritizer.git
+cd grid-outage-prioritizer
+python -m venv venv
+# Activate the virtual environment:
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
 pip install -r requirements.txt
+python dashboard.py
 ```
-
-**2. Run the dashboard (Windows):**
-- Double-click `START_DASHBOARD.bat`
-- Or run:
-  ```bash
-  python dashboard.py
-  ```
-
-Open your browser at [http://127.0.0.1:8000](http://127.0.0.1:8000) and select your business type.
-
-**3. Command-line demo:**
-```bash
-python run_demo.py --business salon
-```
-
-## Features
-
-- 24-hour grid outage forecasting
-- Appliance-by-appliance ON/OFF planning
-- Local dashboard with live updates
-- SMS and voice notification options
-- Easy-to-understand results for non-technical users
-
-## Documentation
-
-- [Outage Factors & Implementation](OUTAGE_FACTORS_AND_IMPLEMENTATION.md)
-- [Grid Outage Taxonomy](GRID_OUTAGE_TAXONOMY.md)
-- [Model Card](MODEL_CARD.md)
-- [SMS Setup](SMS_SETUP.md)
-- [Voice Note Setup](VOICE_NOTE_SETUP.md)
-- [Compliance Checklist](T2_3_COMPLIANCE_CHECK.md)
-- [Business/Product Details](digest_spec.md)
-
-## Testing
-
-```bash
-python -m unittest discover tests
-```
-
-## License
-
-See [LICENSE](LICENSE).
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
 
 ## Demo Video
 
 [Watch the 4-minute demo video](https://drive.google.com/file/d/1ZDblyOTrFII-JmWbkfPFF3NVkL1pZmZI/view?usp=sharing)
+
+## License
+
+See [LICENSE](LICENSE).
 
 This is the mechanism to connect future inputs such as neighbor reports, a utility alert, a rain shock, or a relay-board warning.
 
