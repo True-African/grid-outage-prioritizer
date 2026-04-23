@@ -1,0 +1,152 @@
+{
+  "purpose": "Keep the hackathon workflow simple while acknowledging real outage mechanisms.",
+  "driver_groups": [
+    {
+      "group": "Generation adequacy",
+      "examples": [
+        "unit trips",
+        "fuel shortage",
+        "drought",
+        "auxiliary loss"
+      ],
+      "prototype_fields": [
+        "reserve_margin_index",
+        "fuel_supply_risk_index",
+        "hydro_inflow_stress_index"
+      ]
+    },
+    {
+      "group": "Transmission and substations",
+      "examples": [
+        "line faults",
+        "lightning",
+        "transformer outages",
+        "corridor congestion"
+      ],
+      "prototype_fields": [
+        "asset_health_index",
+        "vegetation_risk_index",
+        "voltage_drop_index"
+      ]
+    },
+    {
+      "group": "Distribution network",
+      "examples": [
+        "feeder faults",
+        "transformer burnouts",
+        "illegal tapping",
+        "phase imbalance"
+      ],
+      "prototype_fields": [
+        "feeder_congestion_index",
+        "non_technical_loss_index",
+        "voltage_drop_index"
+      ]
+    },
+    {
+      "group": "System operations",
+      "examples": [
+        "low reserve",
+        "voltage collapse",
+        "relay misoperation",
+        "slow restoration"
+      ],
+      "prototype_fields": [
+        "reserve_margin_index",
+        "protection_miscoordination_index"
+      ]
+    },
+    {
+      "group": "Environment",
+      "examples": [
+        "heavy rain",
+        "wind",
+        "flooding",
+        "vegetation contact"
+      ],
+      "prototype_fields": [
+        "rain_stress_index",
+        "wind_stress_index",
+        "vegetation_risk_index"
+      ]
+    },
+    {
+      "group": "Organization and maintenance",
+      "examples": [
+        "deferred maintenance",
+        "spares shortage",
+        "operator error"
+      ],
+      "prototype_fields": [
+        "maintenance_flag",
+        "asset_health_index"
+      ]
+    },
+    {
+      "group": "Digital and cyber-physical systems",
+      "examples": [
+        "SCADA failure",
+        "telecom failure",
+        "cyber intrusion"
+      ],
+      "prototype_fields": [
+        "scada_telecom_risk_index"
+      ]
+    },
+    {
+      "group": "Policy and market architecture",
+      "examples": [
+        "underinvestment",
+        "tariff distortion",
+        "fuel-payment arrears"
+      ],
+      "prototype_fields": [
+        "fuel_supply_risk_index",
+        "asset_health_index"
+      ]
+    },
+    {
+      "group": "Hydropower exposure",
+      "examples": [
+        "low inflow",
+        "sedimentation",
+        "gate reliability",
+        "reservoir constraints"
+      ],
+      "prototype_fields": [
+        "hydro_inflow_stress_index"
+      ]
+    },
+    {
+      "group": "DER and backup systems",
+      "examples": [
+        "solar inverter trip",
+        "battery failure",
+        "diesel auto-start failure",
+        "hybrid controller failure"
+      ],
+      "prototype_fields": [
+        "der_backup_risk_index"
+      ]
+    }
+  ],
+  "cascade_logic": [
+    "A primary disturbance occurs, such as generator trip, feeder fault, weather shock, or voltage drop.",
+    "The grid response depends on reserve margin, protection settings, alternate paths, and operator visibility.",
+    "If containment is weak, overloads, misoperations, or delayed restoration can widen the outage.",
+    "The SME action layer cannot prevent the grid outage, but it can protect revenue by prioritizing critical appliances."
+  ],
+  "top_interventions": [
+    "risk-based asset health management",
+    "protection coordination review",
+    "vegetation and corridor management",
+    "reserve adequacy and frequency response",
+    "transformer and feeder loading audits",
+    "SCADA/telecom modernization",
+    "operator drills and restoration discipline",
+    "non-technical loss reduction",
+    "hydrology/fuel adequacy planning",
+    "backup, solar, battery, and hybrid controller testing"
+  ],
+  "scope_note": "The T2.3 brief requires an SME forecast-and-prioritization prototype. This taxonomy is used to select representative factors and to guide future utility-grade analytics."
+}

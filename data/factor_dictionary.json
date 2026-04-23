@@ -1,0 +1,34 @@
+{
+  "required_columns": [
+    "timestamp",
+    "load_mw",
+    "temp_c",
+    "humidity",
+    "wind_ms",
+    "rain_mm",
+    "outage",
+    "duration_min"
+  ],
+  "extra_outage_factors": {
+    "load_stress_index": "How close demand is to local grid stress; higher demand increases outage risk.",
+    "rain_stress_index": "Heavy rain can trigger line faults and access delays.",
+    "wind_stress_index": "Wind increases line-fault risk.",
+    "feeder_congestion_index": "Local feeder stress from evening and weekday demand.",
+    "voltage_drop_index": "Proxy for low-voltage/overloaded feeder conditions.",
+    "maintenance_flag": "Planned or emergency maintenance window.",
+    "neighbor_outage_reports": "Optional stretch signal: simulated nearby outage reports.",
+    "transformer_age_years": "Older equipment has higher fault risk.",
+    "payment_day_flag": "Demand/load pressure around salary/payment days.",
+    "reserve_margin_index": "Low reserve margin means one generator or feeder disturbance is harder to absorb.",
+    "fuel_supply_risk_index": "Fuel shortages or payment arrears can reduce available generation.",
+    "hydro_inflow_stress_index": "Drought or low inflow can reduce hydropower availability.",
+    "vegetation_risk_index": "Tree/vegetation exposure increases line fault risk.",
+    "protection_miscoordination_index": "Weak relay/protection coordination can make small faults trip wider areas.",
+    "scada_telecom_risk_index": "Control-center, telecom, or visibility problems delay response.",
+    "non_technical_loss_index": "Illegal tapping and hidden load can overload transformers/feeders.",
+    "asset_health_index": "Aging or stressed equipment is more likely to fail.",
+    "der_backup_risk_index": "Backup, solar, battery, or hybrid-system readiness can affect resilience during grid stress.",
+    "primary_outage_driver": "Plain-language top driver for dashboards and review."
+  },
+  "ground_reality_note": "The required brief columns are preserved; extra columns make outage causes visible and defendable."
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "name": "LED lighting",
+    "category": "critical",
+    "watts_avg": 45,
+    "start_up_spike_w": 50,
+    "revenue_if_running_rwf_per_h": 1200
+  },
+  {
+    "name": "Phone charging",
+    "category": "critical",
+    "watts_avg": 20,
+    "start_up_spike_w": 25,
+    "revenue_if_running_rwf_per_h": 800
+  },
+  {
+    "name": "Mobile money router",
+    "category": "critical",
+    "watts_avg": 18,
+    "start_up_spike_w": 30,
+    "revenue_if_running_rwf_per_h": 900
+  },
+  {
+    "name": "Hair clippers",
+    "category": "critical",
+    "watts_avg": 35,
+    "start_up_spike_w": 70,
+    "revenue_if_running_rwf_per_h": 2600
+  },
+  {
+    "name": "Hair dryer",
+    "category": "comfort",
+    "watts_avg": 1200,
+    "start_up_spike_w": 1600,
+    "revenue_if_running_rwf_per_h": 3500
+  },
+  {
+    "name": "Hair straightener",
+    "category": "comfort",
+    "watts_avg": 650,
+    "start_up_spike_w": 800,
+    "revenue_if_running_rwf_per_h": 2800
+  },
+  {
+    "name": "Chest freezer",
+    "category": "critical",
+    "watts_avg": 220,
+    "start_up_spike_w": 850,
+    "revenue_if_running_rwf_per_h": 5600
+  },
+  {
+    "name": "Sewing machine",
+    "category": "critical",
+    "watts_avg": 140,
+    "start_up_spike_w": 360,
+    "revenue_if_running_rwf_per_h": 3200
+  },
+  {
+    "name": "Electric iron",
+    "category": "comfort",
+    "watts_avg": 1000,
+    "start_up_spike_w": 1300,
+    "revenue_if_running_rwf_per_h": 2400
+  },
+  {
+    "name": "TV/radio",
+    "category": "luxury",
+    "watts_avg": 90,
+    "start_up_spike_w": 120,
+    "revenue_if_running_rwf_per_h": 300
+  }
+]

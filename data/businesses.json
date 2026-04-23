@@ -1,0 +1,46 @@
+[
+  {
+    "name": "salon",
+    "display_name": "Neighborhood salon",
+    "backup_limit_w": 700,
+    "risk_threshold": 0.11,
+    "appliances": [
+      "LED lighting",
+      "Phone charging",
+      "Mobile money router",
+      "Hair clippers",
+      "Hair dryer",
+      "Hair straightener",
+      "TV/radio"
+    ],
+    "notes": "Small inverter can keep clippers, lights, payments, and one mid-load tool, but not the dryer."
+  },
+  {
+    "name": "cold_room",
+    "display_name": "Cold room kiosk",
+    "backup_limit_w": 360,
+    "risk_threshold": 0.09,
+    "appliances": [
+      "Chest freezer",
+      "LED lighting",
+      "Phone charging",
+      "Mobile money router"
+    ],
+    "notes": "Backup is reserved for the freezer and payment/lighting basics."
+  },
+  {
+    "name": "tailor",
+    "display_name": "Tailor shop",
+    "backup_limit_w": 500,
+    "risk_threshold": 0.1,
+    "appliances": [
+      "Sewing machine",
+      "Electric iron",
+      "LED lighting",
+      "Phone charging",
+      "Mobile money router",
+      "TV/radio"
+    ],
+    "notes": "Sewing continues on backup; ironing is delayed during high-risk hours."
+  }
+]
