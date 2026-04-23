@@ -1,83 +1,57 @@
 
+
 # Power Plan
 
-KTT Power Plan helps small businesses prepare for unreliable electricity. It forecasts the next 24 hours of outage risk, estimates outage duration, and converts that forecast into an appliance-by-appliance ON/OFF plan for a salon, cold room, or tailor shop.
+Power Plan forecasts grid outages and generates appliance-by-appliance ON/OFF plans for small businesses. It features a local dashboard, SMS/voice notifications, and clear documentation.
 
-The key product idea is simple: when risk rises, the business should not guess what to unplug. The system sheds luxury appliances first, then comfort appliances, and protects critical revenue appliances for as long as the backup power budget allows.
+## Quick Start
 
-You do **not** need a machine-learning background to use the app. The dashboard explains the result as business risk, appliance actions, SMS messages, voice prompts, and expected RWF protected.
-
-For details on what causes outage risk and how the ground-reality adaptations are implemented, see [OUTAGE_FACTORS_AND_IMPLEMENTATION.md](OUTAGE_FACTORS_AND_IMPLEMENTATION.md).
-
-For the broader outage taxonomy extension, see [GRID_OUTAGE_TAXONOMY.md](GRID_OUTAGE_TAXONOMY.md).
-
-For a direct brief-by-brief check, see [T2_3_COMPLIANCE_CHECK.md](T2_3_COMPLIANCE_CHECK.md).
-
-## Easiest Run: Local Dashboard
-
-On Windows, double-click:
-
-```text
-START_DASHBOARD.bat
-```
-
-It opens the dashboard at:
-
-```text
-http://127.0.0.1:8000
-```
-
-Use the business selector to switch between Salon, Cold room, and Tailor.
-
-Terminal option:
-
+**1. Install dependencies:**
 ```bash
 pip install -r requirements.txt
-python dashboard.py
 ```
 
-## Command-Line Build Option
+**2. Run the dashboard (Windows):**
+- Double-click `START_DASHBOARD.bat`
+- Or run:
+  ```bash
+  python dashboard.py
+  ```
 
-For technical reviewers who want the generated report files:
+Open your browser at [http://127.0.0.1:8000](http://127.0.0.1:8000) and select your business type.
 
+**3. Command-line demo:**
 ```bash
 python run_demo.py --business salon
 ```
 
-This creates or refreshes only the main generated outputs:
+## Features
 
-- `models/outage_forecaster.joblib`
-- `outputs/demo_report.json`
-- `outputs/plans_all.csv`
-- `outputs/forecast_plan_salon.png`
-- `lite_ui.html`
+- 24-hour grid outage forecasting
+- Appliance-by-appliance ON/OFF planning
+- Local dashboard with live updates
+- SMS and voice notification options
+- Easy-to-understand results for non-technical users
 
-The required source and documentation files stay in the repo, but the generated outputs are intentionally consolidated so judges are not overwhelmed.
+## Documentation
 
-## Live Auto-Update Mechanism
+- [Outage Factors & Implementation](OUTAGE_FACTORS_AND_IMPLEMENTATION.md)
+- [Grid Outage Taxonomy](GRID_OUTAGE_TAXONOMY.md)
+- [Model Card](MODEL_CARD.md)
+- [SMS Setup](SMS_SETUP.md)
+- [Voice Note Setup](VOICE_NOTE_SETUP.md)
+- [Compliance Checklist](T2_3_COMPLIANCE_CHECK.md)
+- [Business/Product Details](digest_spec.md)
 
-The localhost dashboard updates automatically.
+## Testing
 
-How it works:
-
-1. `dashboard.py` serves the dashboard and the current report.
-2. The browser checks `/api/report` every 3 seconds.
-3. When a new shock, alert, or grid measurement is created, the server saves it and updates `outputs/demo_report.json`.
-4. The browser sees a new report revision and redraws the risk chart, appliance plan, SMS window, voice prompt, incoming-data inbox, and business impact.
-
-For a live demo, click **Simulate new alert** in the dashboard. This creates a neighbor-outage signal, raises risk in the affected window, and recalculates the appliance plan.
-
-External tools can also create alerts by sending JSON to:
-
-```text
-POST http://127.0.0.1:8000/api/event
+```bash
+python -m unittest discover tests
 ```
 
-Example from PowerShell:
+## License
 
-```powershell
-Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/event" -Method POST -ContentType "application/json" -Body '{"title":"Rain shock","message":"Heavy rain reported near the feeder","p_boost":0.12,"duration_hours":4,"start_hour":"18"}'
-```
+See [LICENSE](LICENSE).
 
 This is the mechanism to connect future inputs such as neighbor reports, a utility alert, a rain shock, or a relay-board warning.
 
