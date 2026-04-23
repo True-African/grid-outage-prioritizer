@@ -53,6 +53,10 @@ python -m unittest discover tests
 
 See [LICENSE](LICENSE).
 
+## Demo Video
+
+[Watch the 4-minute demo video](https://drive.google.com/file/d/1ZDblyOTrFII-JmWbkfPFF3NVkL1pZmZI/view?usp=sharing)
+
 This is the mechanism to connect future inputs such as neighbor reports, a utility alert, a rain shock, or a relay-board warning.
 
 The dashboard also accepts a more general incoming-data endpoint:
