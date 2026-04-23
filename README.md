@@ -347,9 +347,9 @@ The repo still runs without the hosted link because `dashboard.py` and `run_demo
 
 ## Video
 
-4-minute video URL: **TODO - add YouTube/Vimeo/Drive link before submission**
+4-minute video URL: [https://drive.google.com/file/d/1ZDblyOTrFII-JmWbkfPFF3NVkL1pZmZI/view?usp=sharing](https://drive.google.com/file/d/1ZDblyOTrFII-JmWbkfPFF3NVkL1pZmZI/view?usp=sharing)
 
-Use `VIDEO_SCRIPT.md` for the exact required timing.
+Use [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md) for the exact required timing.
 
 ## Known Limitations
 
@@ -361,9 +361,5 @@ Use `VIDEO_SCRIPT.md` for the exact required timing.
 
 ## Honor Code And Process
 
-See:
-
-- `process_log.md`
-- `SIGNED.md`
 
 AI assistance was used for planning, implementation support, documentation structure, and review. The code was run locally and the metrics above are from generated outputs.
