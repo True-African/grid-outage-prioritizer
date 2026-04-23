@@ -1,5 +1,5 @@
 
-# KTT Power Plan
+# Power Plan
 
 KTT Power Plan helps small businesses prepare for unreliable electricity. It forecasts the next 24 hours of outage risk, estimates outage duration, and converts that forecast into an appliance-by-appliance ON/OFF plan for a salon, cold room, or tailor shop.
 
